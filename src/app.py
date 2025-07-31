@@ -59,6 +59,24 @@ def create():
     except: 
         return jsonify(response = 'error'), 500
 
+# route to redirect to database
+@app.route('/<id>')
+def getUrl (id):
+    try:
+        cursor = mysql.connection.cursor()
+        
+        # search in database url direction
+        cursor.execute("SELECT URL FROM LINKS WHERE SHORT_LINK = BINARY %s", (id,))
+
+        # save in a variable and close connection
+        data = cursor.fetchone()
+        cursor.close()
+
+        return jsonify(response = data[0]), 200
+
+    except:
+        return jsonify(response = 'error'), 500
+
 # run app
 if __name__ == '__main__':
     app.run(port = 80, debug = True)
