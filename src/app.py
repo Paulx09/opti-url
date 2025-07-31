@@ -17,6 +17,33 @@ app.config['MYSQL_DATABASE'] = 'db_opti_url'
 # init mysql
 mysql = MySQL(app)
 
+# init route
+@app.route('/', methods = ['GET'])
+def inicio():
+    try:
+        return jsonify(response = 'inicio')
+    except: 
+        return jsonify(response = 'error'), 500
+
+# route for create link and save in database
+@app.route('/create', methods = ['POST'])
+def create():
+    try:
+        if request.method == 'POST':
+            # get url
+            url = request.form['url']
+            cursor = mysql.connection.cursor()
+            short_link = shortuuid.ShortUUID().random(length = 7)
+            cursor.execute("INSERT INTO links (url, short_link) VALUES (%s, %s)", (url, short_link))
+            
+            mysql.connection.commit()
+            cursor.close()
+            
+            new_url = endpoint + '/' + short_link
+            return jsonify(response = new_url)
+    except: 
+        return jsonify(response = 'error'), 500
+
 # run app
 if __name__ == '__main__':
     app.run(port = 80, debug = True)
