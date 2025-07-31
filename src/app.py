@@ -37,12 +37,19 @@ def create():
             # cicle for duplicated url
             while True:
                 short_link = shortuuid.ShortUUID().random(length = 7)
-                cursor.execute("SELECT * FROM links WHERE short_link = BINARY %s", (short_link))
+                cursor.execute("SELECT * FROM LINKS WHERE SHORT_LINK = BINARY %s", (short_link,))
                 
                 if not cursor.fetchone():
                     break
             
-            cursor.execute("INSERT INTO links (url, short_link) VALUES (%s, %s)", (url, short_link))
+            # check if url already exists
+            cursor.execute("SELECT SHORT_LINK FROM LINKS WHERE URL = BINARY %s", (url,))
+            data = cursor.fetchone()
+            if data:
+                new_url = endpoint + '/' + data[0]
+                return jsonify(response = new_url)
+            
+            cursor.execute("INSERT INTO LINKS (URL, SHORT_LINK) VALUES (%s, %s)", (url, short_link))
             
             mysql.connection.commit()
             cursor.close()
