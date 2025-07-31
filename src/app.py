@@ -33,7 +33,15 @@ def create():
             # get url
             url = request.form['url']
             cursor = mysql.connection.cursor()
-            short_link = shortuuid.ShortUUID().random(length = 7)
+            
+            # cicle for duplicated url
+            while True:
+                short_link = shortuuid.ShortUUID().random(length = 7)
+                cursor.execute("SELECT * FROM links WHERE short_link = BINARY %s", (short_link))
+                
+                if not cursor.fetchone():
+                    break
+            
             cursor.execute("INSERT INTO links (url, short_link) VALUES (%s, %s)", (url, short_link))
             
             mysql.connection.commit()
