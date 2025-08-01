@@ -1,0 +1,24 @@
+{% extends "layout.html" %} {% block body %}
+
+<div class="d-flex flex-column justify-content-center">
+  <h1 id="contador" class="text-center fs-1 fw-bold">5</h1>
+  <img src="static/img/ads.png" alt="Publicidad" style="border-radius: 10px;"/>
+</div>
+
+<script>
+  function redirect() {
+    const contador = document.getElementById("contador");
+    let count = 5;
+    setInterval(() => {
+      if (count > 0) {
+        contador.innerHTML = count -= 1;
+      } else {
+        location.replace("{{ url }}")
+      }
+    }, 1000);
+  }
+
+  redirect();
+</script>
+
+{% endblock %}
