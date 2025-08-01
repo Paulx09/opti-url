@@ -17,13 +17,16 @@ app.config['MYSQL_DATABASE'] = 'db_opti_url'
 # init mysql
 mysql = MySQL(app)
 
+# set secret key
+app.secret_key = 'C14v3S3cr3t4'
+
 # init route
 @app.route('/', methods = ['GET'])
 def inicio():
     try:
-        return jsonify(response = 'inicio')
+        return render_template('index.html'), 200
     except: 
-        return jsonify(response = 'error'), 500
+        return render_template('404.html'), 404
 
 # route for create link and save in database
 @app.route('/create', methods = ['POST'])
@@ -46,8 +49,8 @@ def create():
             cursor.execute("SELECT SHORT_LINK FROM LINKS WHERE URL = BINARY %s", (url,))
             data = cursor.fetchone()
             if data:
-                new_url = endpoint + '/' + data[0]
-                return jsonify(response = new_url)
+                flash(endpoint + '/' + data[0])
+                return redirect(url_for('inicio')), 302
             
             cursor.execute("INSERT INTO LINKS (URL, SHORT_LINK) VALUES (%s, %s)", (url, short_link))
             
@@ -55,9 +58,10 @@ def create():
             cursor.close()
             
             new_url = endpoint + '/' + short_link
-            return jsonify(response = new_url)
+            flash(new_url)
+            return redirect(url_for('inicio')), 302
     except: 
-        return jsonify(response = 'error'), 500
+        return render_template('404.html'), 404
 
 # route to redirect to database
 @app.route('/<id>')
@@ -72,10 +76,10 @@ def getUrl (id):
         data = cursor.fetchone()
         cursor.close()
 
-        return jsonify(response = data[0]), 200
+        return render_template('ads.html', url=data[0]), 200
 
     except:
-        return jsonify(response = 'error'), 500
+        return render_template('404.html'), 404
 
 # run app
 if __name__ == '__main__':
