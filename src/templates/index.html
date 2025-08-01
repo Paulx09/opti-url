@@ -1,0 +1,43 @@
+{% extends "layout.html" %} {% block body %}
+
+<div class="d-flex flex-column justify-content-center">
+  <div class="d-flex justify-content-center">
+    <img src="static/img/banner.png" alt="Banner" style="max-width: 60%; border-radius:20px"/>
+  </div>
+  <div class="card card-body p-5 mt-5" style="border-radius: 20px;">
+    {% with nueva_url = get_flashed_messages() %}
+
+    {% if not nueva_url %}
+    <form action="{{url_for('create')}}" method="POST">
+      <div class="input-group mb-3 mt-3">
+        <span class="input-group-text" id="bassic-addon3" style="border-radius:10px;">Ingresa URL</span>
+        <input type="url" class="form-control ms-2" style="border-radius: 10px;" name="url" placeholder="https://ejemplo.com" required/>
+        <button class ="btn btn-primary ms-2" style="border-radius: 10px;">Cortar URL</button>
+    </form>
+    {% else %}
+    <div class="input-group mb-3">
+      <input id="nueva-url" type="text" class="form-control ms-2 mt-2" style="border-radius: 10px;" value="{{nueva_url[0]}}"/>
+      <button id="btn-copiar" onclick="copiarURL()" type="button" class="btn btn-outline-success ms-2 mt-2" style="border-radius: 10px;">Copiar URL</button>
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+</div>
+<script>
+  function copiarURL() {
+    const nuevaURL = document.getElementById("nueva-url");
+    nuevaURL.select();
+    nuevaURL.setSelectionRange(0, 99999); // Para dispositivos móviles
+    document.execCommand("copy");
+
+    const btnCopiar = document.getElementById("btn-copiar");
+    btnCopiar.innerHTML = "¡Copiado!";
+    btnCopiar.classList.replace("btn-outline-success", "btn-success");
+
+    setTimeout(() => {
+      location.replace("{{ url_for('inicio') }}")
+    }, 3000)
+  }
+</script>
+
+{% endblock %}
