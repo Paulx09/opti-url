@@ -18,16 +18,23 @@ mysql_config = {
     'database': os.getenv('MYSQLDATABASE', 'railway'),
     'port': int(os.getenv('MYSQLPORT', '3306')),
     'charset': 'utf8mb4',
-    'autocommit': True
+    'autocommit': True,
+    'connection_timeout': 10,
+    'use_pure': True
 }
 
 # create connection pool
 def get_db_connection():
-    return mysql.connector.connect(**mysql_config)
+    try:
+        return mysql.connector.connect(**mysql_config)
+    except Exception as e:
+        print(f"Error conectando a la base de datos: {e}")
+        raise
 
 # Función para inicializar la base de datos
 def init_database():
     try:
+        print("Intentando inicializar base de datos...")
         connection = get_db_connection()
         cursor = connection.cursor()
         
@@ -46,9 +53,11 @@ def init_database():
         cursor.close()
         connection.close()
         print("Tabla LINKS inicializada correctamente")
+        return True
         
     except Exception as e:
         print(f"Error inicializando base de datos: {e}")
+        return False
 
 # La inicialización se hace bajo demanda en la primera consulta
 
@@ -63,12 +72,18 @@ def inicio():
     except: 
         return render_template('404.html'), 404
 
+# Health check endpoint
+@app.route('/health', methods = ['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'message': 'App is running'}), 200
+
 # route for create link and save in database
 @app.route('/create', methods = ['POST'])
 def create():
     try:
-        # Inicializar base de datos si es la primera vez
-        init_database()
+        # Inicializar base de datos si es la primera vez (con timeout)
+        if not init_database():
+            return jsonify({'error': 'Database initialization failed'}), 500
         
         if request.method == 'POST':
             # get url
