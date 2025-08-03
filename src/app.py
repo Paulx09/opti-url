@@ -77,13 +77,22 @@ def inicio():
 def health_check():
     return jsonify({'status': 'healthy', 'message': 'App is running'}), 200
 
+# Manual database initialization endpoint
+@app.route('/init-db', methods = ['GET'])
+def manual_init_db():
+    try:
+        if init_database():
+            return jsonify({'status': 'success', 'message': 'Database initialized successfully'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'Database initialization failed'}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Error: {str(e)}'}), 500
+
 # route for create link and save in database
 @app.route('/create', methods = ['POST'])
 def create():
     try:
-        # Inicializar base de datos si es la primera vez (con timeout)
-        if not init_database():
-            return jsonify({'error': 'Database initialization failed'}), 500
+        # REMOVED: auto initialization - use /init-db endpoint first
         
         if request.method == 'POST':
             # get url
