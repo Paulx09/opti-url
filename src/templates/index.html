@@ -7,36 +7,92 @@
   <div class="card card-body p-5 mt-5" style="border-radius: 20px;">
     {% with nueva_url = get_flashed_messages() %}
 
-    {% if not nueva_url %}
-    <form action="{{url_for('create')}}" method="POST">
+    <form id="url-form">
       <div class="input-group mb-3 mt-3">
         <span class="input-group-text" id="bassic-addon3" style="border-radius:10px;">Ingresa URL</span>
-        <input type="url" class="form-control ms-2" style="border-radius: 10px;" name="url" placeholder="https://ejemplo.com" required/>
-        <button class ="btn btn-primary ms-2" style="border-radius: 10px;">Cortar URL</button>
+        <input type="url" class="form-control ms-2" style="border-radius: 10px;" id="url-input" name="url" placeholder="https://ejemplo.com" required/>
+        <button type="submit" class ="btn btn-primary ms-2" style="border-radius: 10px;">Cortar URL</button>
+      </div>
     </form>
-    {% else %}
-    <div class="input-group mb-3">
-      <input id="nueva-url" type="text" class="form-control ms-2 mt-2" style="border-radius: 10px;" value="{{nueva_url[0]}}"/>
+    
+    <!-- Área para mostrar el resultado -->
+    <div id="result-area" class="input-group mb-3" style="display: none;">
+      <input id="nueva-url" type="text" class="form-control ms-2 mt-2" style="border-radius: 10px;" readonly/>
       <button id="btn-copiar" onclick="copiarURL()" type="button" class="btn btn-outline-success ms-2 mt-2" style="border-radius: 10px;">Copiar URL</button>
     </div>
-    {% endif %}
+    
+    <!-- Área para mostrar errores -->
+    <div id="error-area" class="alert alert-danger mt-3" style="display: none; border-radius: 10px;"></div>
     {% endwith %}
   </div>
 </div>
 <script>
+  // Manejar el submit del formulario con AJAX
+  document.getElementById('url-form').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Prevenir el submit tradicional
+    
+    const urlInput = document.getElementById('url-input');
+    const resultArea = document.getElementById('result-area');
+    const errorArea = document.getElementById('error-area');
+    const nuevaUrlInput = document.getElementById('nueva-url');
+    
+    // Ocultar áreas de resultado y error
+    resultArea.style.display = 'none';
+    errorArea.style.display = 'none';
+    
+    // Crear FormData para enviar al servidor
+    const formData = new FormData();
+    formData.append('url', urlInput.value);
+    
+    try {
+      // Enviar petición al servidor
+      const response = await fetch('/create', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (data.short_link) {
+        // Mostrar el resultado exitoso
+        nuevaUrlInput.value = data.short_link;
+        resultArea.style.display = 'block';
+        urlInput.value = ''; // Limpiar el formulario
+      } else if (data.error) {
+        // Mostrar error
+        errorArea.textContent = data.error;
+        errorArea.style.display = 'block';
+      }
+    } catch (error) {
+      // Mostrar error de conexión
+      errorArea.textContent = 'Error de conexión: ' + error.message;
+      errorArea.style.display = 'block';
+    }
+  });
+
   function copiarURL() {
     const nuevaURL = document.getElementById("nueva-url");
     nuevaURL.select();
     nuevaURL.setSelectionRange(0, 99999); // Para dispositivos móviles
-    document.execCommand("copy");
+    
+    // Usar la API moderna de clipboard si está disponible
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(nuevaURL.value);
+    } else {
+      // Fallback para navegadores más antiguos
+      document.execCommand("copy");
+    }
 
     const btnCopiar = document.getElementById("btn-copiar");
     btnCopiar.innerHTML = "¡Copiado!";
     btnCopiar.classList.replace("btn-outline-success", "btn-success");
 
     setTimeout(() => {
-      location.replace("{{ url_for('inicio') }}")
-    }, 3000)
+      // Resetear el botón y ocultar el resultado
+      btnCopiar.innerHTML = "Copiar URL";
+      btnCopiar.classList.replace("btn-success", "btn-outline-success");
+      document.getElementById('result-area').style.display = 'none';
+    }, 3000);
   }
 </script>
 
