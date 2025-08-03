@@ -50,11 +50,7 @@ def init_database():
     except Exception as e:
         print(f"Error inicializando base de datos: {e}")
 
-# Inicializar la base de datos al arrancar la aplicación
-try:
-    init_database()
-except:
-    print("No se pudo inicializar la base de datos en el arranque")
+# La inicialización se hace bajo demanda en la primera consulta
 
 # set secret key - usar variable de entorno
 app.secret_key = os.getenv('SECRET_KEY', 'C14v3S3cr3t4')
@@ -71,6 +67,9 @@ def inicio():
 @app.route('/create', methods = ['POST'])
 def create():
     try:
+        # Inicializar base de datos si es la primera vez
+        init_database()
+        
         if request.method == 'POST':
             # get url
             url = request.form['url']
