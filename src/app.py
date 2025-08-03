@@ -12,10 +12,11 @@ endpoint = os.getenv('APP_URL', 'http://localhost')
 
 # mysql connection config
 mysql_config = {
-    'host': os.getenv('MYSQL_HOST', 'localhost'),
-    'user': os.getenv('MYSQL_USER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD', 'P@u102018.180905'),
-    'database': os.getenv('MYSQL_DATABASE', 'db_opti_url'),
+    'host': os.getenv('MYSQLHOST', 'localhost'),
+    'user': os.getenv('MYSQLUSER', 'root'),
+    'password': os.getenv('MYSQLPASSWORD', 'P@u102018.180905'),
+    'database': os.getenv('MYSQLDATABASE', 'railway'),
+    'port': int(os.getenv('MYSQLPORT', '3306')),
     'charset': 'utf8mb4',
     'autocommit': True
 }
