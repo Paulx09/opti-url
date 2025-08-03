@@ -223,7 +223,7 @@ def create():
             
             # cicle for duplicated url
             while True:
-                short_link = shortuuid.ShortUUID().random(length = 7)
+                short_link = shortuuid.ShortUUID().random(length = 5)  # Reducido a 5 caracteres
                 cursor.execute("SELECT * FROM links WHERE short_link = BINARY %s", (short_link,))
                 
                 if not cursor.fetchone():
