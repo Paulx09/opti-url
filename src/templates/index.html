@@ -27,6 +27,17 @@
   </div>
 </div>
 <script>
+  // Limpiar el input al cargar la página
+  document.addEventListener('DOMContentLoaded', function() {
+    const nuevaUrlInput = document.getElementById('nueva-url');
+    const resultArea = document.getElementById('result-area');
+    
+    // Asegurar que el área de resultado esté oculta al cargar
+    resultArea.style.display = 'none';
+    nuevaUrlInput.value = '';
+    console.log('Página cargada - input limpiado');
+  });
+
   // Manejar el submit del formulario con AJAX
   document.getElementById('url-form').addEventListener('submit', async function(e) {
     e.preventDefault(); // Prevenir el submit tradicional
@@ -63,9 +74,22 @@
       if (data.short_link) {
         // Mostrar el resultado exitoso
         console.log('Short link recibido:', data.short_link); // Debug
+        
+        // Asignar valor al input de múltiples maneras para asegurar que funcione
         nuevaUrlInput.value = data.short_link;
+        nuevaUrlInput.setAttribute('value', data.short_link);
+        
         console.log('Valor asignado al input:', nuevaUrlInput.value); // Debug
+        console.log('Atributo value del input:', nuevaUrlInput.getAttribute('value')); // Debug
+        
+        // Mostrar el área de resultado
         resultArea.style.display = 'block';
+        
+        // Forzar un re-render
+        setTimeout(() => {
+          console.log('Verificación final - valor del input:', nuevaUrlInput.value);
+        }, 100);
+        
         urlInput.value = ''; // Limpiar el formulario
       } else if (data.error) {
         // Mostrar error
