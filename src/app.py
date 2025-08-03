@@ -40,7 +40,10 @@ def init_database():
         print(f"Base de datos: {mysql_config['database']}")
         
         connection = get_db_connection()
+        print("Conexión establecida exitosamente")
+        
         cursor = connection.cursor()
+        print("Cursor creado")
         
         # Crear la tabla LINKS si no existe
         create_table_query = """
@@ -52,8 +55,16 @@ def init_database():
         )
         """
         
+        print("Ejecutando query de creación de tabla...")
         cursor.execute(create_table_query)
         connection.commit()
+        print("Tabla creada y commit realizado")
+        
+        # Verificar que la tabla existe
+        cursor.execute("SHOW TABLES LIKE 'LINKS'")
+        result = cursor.fetchone()
+        print(f"Verificación de tabla: {result}")
+        
         cursor.close()
         connection.close()
         print("Tabla LINKS inicializada correctamente")
@@ -62,6 +73,9 @@ def init_database():
     except Exception as e:
         print(f"Error inicializando base de datos: {e}")
         print(f"Tipo de error: {type(e).__name__}")
+        print(f"Detalles del error: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return False
 
 # La inicialización se hace bajo demanda en la primera consulta
@@ -97,12 +111,38 @@ def db_config():
 @app.route('/init-db', methods = ['GET'])
 def manual_init_db():
     try:
-        if init_database():
+        print("=== Iniciando diagnóstico de base de datos ===")
+        result = init_database()
+        if result:
             return jsonify({'status': 'success', 'message': 'Database initialized successfully'}), 200
         else:
-            return jsonify({'status': 'error', 'message': 'Database initialization failed'}), 500
+            return jsonify({'status': 'error', 'message': 'Database initialization failed - check logs for details'}), 500
     except Exception as e:
+        print(f"Error en manual_init_db: {e}")
         return jsonify({'status': 'error', 'message': f'Error: {str(e)}'}), 500
+
+# Test database connection endpoint
+@app.route('/test-db', methods = ['GET'])
+def test_db_connection():
+    try:
+        print("=== Probando conexión básica ===")
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("SELECT 1 as test")
+        result = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        return jsonify({'status': 'success', 'message': f'Database connection successful. Test result: {result}'}), 200
+    except Exception as e:
+        print(f"Error en test de conexión: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        return jsonify({
+            'status': 'error', 
+            'message': f'Database connection failed: {str(e)}',
+            'error_type': type(e).__name__,
+            'traceback': error_details
+        }), 500
 
 # route for create link and save in database
 @app.route('/create', methods = ['POST'])
