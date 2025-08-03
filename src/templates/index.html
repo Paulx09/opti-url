@@ -15,8 +15,16 @@
     
     <!-- Área para mostrar el resultado -->
     <div id="result-area" class="input-group mb-3" style="display: none;">
-      <input id="nueva-url" type="text" class="form-control ms-2 mt-2" style="border-radius: 10px;" readonly/>
+      <input id="nueva-url" type="text" class="form-control ms-2 mt-2" 
+             style="border-radius: 10px; color: #000 !important; background-color: #fff !important; font-size: 14px !important; opacity: 1 !important;" />
       <button id="btn-copiar" onclick="copiarURL()" type="button" class="btn btn-outline-success ms-2 mt-2" style="border-radius: 10px;">Copiar URL</button>
+    </div>
+    
+    <!-- Alternativa visual con párrafo -->
+    <div id="backup-display" class="alert alert-success mt-3" style="display: none;">
+      <strong>URL acortada generada:</strong><br>
+      <span id="url-display" style="font-family: monospace; font-size: 16px; color: #000; background-color: #f8f9fa; padding: 5px; border: 1px solid #ddd; border-radius: 5px; display: inline-block; min-width: 300px;"></span>
+      <button onclick="copiarURLAlternativa()" class="btn btn-sm btn-outline-primary ms-2">Copiar</button>
     </div>
     
     <!-- Área para mostrar errores -->
@@ -76,7 +84,14 @@
         nuevaUrlInput.value = data.short_link;
         nuevaUrlInput.setAttribute('value', data.short_link);
         
+        // También mostrar en el display alternativo
+        const urlDisplay = document.getElementById('url-display');
+        const backupDisplay = document.getElementById('backup-display');
+        urlDisplay.textContent = data.short_link;
+        backupDisplay.style.display = 'block';
+        
         console.log('Valor asignado al input:', nuevaUrlInput.value); // Debug
+        console.log('Valor asignado al display alternativo:', urlDisplay.textContent); // Debug
         console.log('Atributo value del input:', nuevaUrlInput.getAttribute('value')); // Debug
         
         // Mostrar el área de resultado
@@ -154,7 +169,45 @@
       btnCopiar.innerHTML = "Copiar URL";
       btnCopiar.classList.replace("btn-success", "btn-outline-success");
       document.getElementById('result-area').style.display = 'none';
+      document.getElementById('backup-display').style.display = 'none';
     }, 3000);
+  }
+  
+  function copiarURLAlternativa() {
+    const urlDisplay = document.getElementById('url-display');
+    const url = urlDisplay.textContent;
+    console.log('[copiarURLAlternativa] Copiando:', url);
+    
+    if (!url) {
+      console.error('¡Display alternativo está vacío!');
+      return;
+    }
+    
+    // Usar la API moderna de clipboard
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() {
+        console.log('[copiarURLAlternativa] URL copiada exitosamente');
+        alert('URL copiada al portapapeles!');
+      }).catch(function(err) {
+        console.error('[copiarURLAlternativa] Error:', err);
+        alert('Error al copiar la URL');
+      });
+    } else {
+      // Fallback para navegadores más antiguos
+      const textArea = document.createElement("textarea");
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('URL copiada al portapapeles!');
+      } catch (err) {
+        console.error('[copiarURLAlternativa] Error:', err);
+        alert('Error al copiar la URL');
+      }
+      document.body.removeChild(textArea);
+    }
   }
 </script>
 
