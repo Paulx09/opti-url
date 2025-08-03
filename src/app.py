@@ -25,6 +25,37 @@ mysql_config = {
 def get_db_connection():
     return mysql.connector.connect(**mysql_config)
 
+# Función para inicializar la base de datos
+def init_database():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        
+        # Crear la tabla LINKS si no existe
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS LINKS (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            URL TEXT NOT NULL,
+            SHORT_LINK VARCHAR(10) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        cursor.execute(create_table_query)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        print("Tabla LINKS inicializada correctamente")
+        
+    except Exception as e:
+        print(f"Error inicializando base de datos: {e}")
+
+# Inicializar la base de datos al arrancar la aplicación
+try:
+    init_database()
+except:
+    print("No se pudo inicializar la base de datos en el arranque")
+
 # set secret key - usar variable de entorno
 app.secret_key = os.getenv('SECRET_KEY', 'C14v3S3cr3t4')
 
