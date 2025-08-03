@@ -19,17 +19,41 @@ mysql_config = {
     'port': int(os.getenv('MYSQLPORT', '3306')),
     'charset': 'utf8mb4',
     'autocommit': True,
-    'connection_timeout': 10,
-    'use_pure': True
+    'connection_timeout': 20,
+    'use_pure': True,
+    'sql_mode': '',
+    'raise_on_warnings': False
+}
+
+# Alternative external config (fallback)
+mysql_external_config = {
+    'host': os.getenv('MYSQL_PUBLIC_HOST', mysql_config['host']),
+    'user': mysql_config['user'],
+    'password': mysql_config['password'],
+    'database': mysql_config['database'],
+    'port': int(os.getenv('MYSQL_PUBLIC_PORT', mysql_config['port'])),
+    'charset': 'utf8mb4',
+    'autocommit': True,
+    'connection_timeout': 20,
+    'use_pure': True,
+    'sql_mode': '',
+    'raise_on_warnings': False
 }
 
 # create connection pool
 def get_db_connection():
     try:
+        # Try internal connection first
         return mysql.connector.connect(**mysql_config)
-    except Exception as e:
-        print(f"Error conectando a la base de datos: {e}")
-        raise
+    except Exception as internal_error:
+        print(f"Error with internal connection: {internal_error}")
+        try:
+            # Try external connection as fallback
+            print("Trying external connection...")
+            return mysql.connector.connect(**mysql_external_config)
+        except Exception as external_error:
+            print(f"Error with external connection: {external_error}")
+            raise internal_error  # Raise the original error
 
 # Función para inicializar la base de datos
 def init_database():
@@ -143,6 +167,38 @@ def test_db_connection():
             'error_type': type(e).__name__,
             'traceback': error_details
         }), 500
+
+# Database connection test with retry
+@app.route('/test-db-retry', methods = ['GET'])
+def test_db_connection_retry():
+    import time
+    attempts = 3
+    for attempt in range(attempts):
+        try:
+            print(f"Intento {attempt + 1} de {attempts}")
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            result = cursor.fetchone()
+            cursor.close()
+            connection.close()
+            return jsonify({
+                'status': 'success', 
+                'message': f'Database connection successful on attempt {attempt + 1}',
+                'result': result[0] if result else None
+            })
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < attempts - 1:
+                print(f"Waiting 2 seconds before retry...")
+                time.sleep(2)
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Database connection failed after {attempts} attempts',
+                    'error_type': type(e).__name__,
+                    'last_error': str(e)
+                }), 500
 
 # route for create link and save in database
 @app.route('/create', methods = ['POST'])
