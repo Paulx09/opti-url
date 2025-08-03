@@ -5,8 +5,6 @@
     <img src="static/img/banner.png" alt="Banner" style="max-width: 60%; border-radius:20px"/>
   </div>
   <div class="card card-body p-5 mt-5" style="border-radius: 20px;">
-    {% with nueva_url = get_flashed_messages() %}
-
     <form id="url-form">
       <div class="input-group mb-3 mt-3">
         <span class="input-group-text" id="bassic-addon3" style="border-radius:10px;">Ingresa URL</span>
@@ -23,7 +21,6 @@
     
     <!-- Área para mostrar errores -->
     <div id="error-area" class="alert alert-danger mt-3" style="display: none; border-radius: 10px;"></div>
-    {% endwith %}
   </div>
 </div>
 <script>
@@ -85,9 +82,23 @@
         // Mostrar el área de resultado
         resultArea.style.display = 'block';
         
-        // Forzar un re-render
+        // Forzar un re-render y actualización visual múltiple
         setTimeout(() => {
           console.log('Verificación final - valor del input:', nuevaUrlInput.value);
+          
+          // Forzar actualización visual
+          nuevaUrlInput.focus();
+          nuevaUrlInput.blur();
+          
+          // Trigger eventos para forzar re-render
+          nuevaUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
+          nuevaUrlInput.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          // Forzar selección para verificar visibilidad
+          nuevaUrlInput.select();
+          setTimeout(() => {
+            nuevaUrlInput.setSelectionRange(0, 0); // Deseleccionar
+          }, 100);
         }, 100);
         
         urlInput.value = ''; // Limpiar el formulario
@@ -116,6 +127,13 @@
 
   function copiarURL() {
     const nuevaURL = document.getElementById("nueva-url");
+    console.log('Copiando URL - valor actual:', nuevaURL.value); // Debug
+    
+    if (!nuevaURL.value) {
+      console.error('¡Input está vacío! Esto no debería pasar.');
+      return;
+    }
+    
     nuevaURL.select();
     nuevaURL.setSelectionRange(0, 99999); // Para dispositivos móviles
     
