@@ -75,7 +75,7 @@ def init_database():
         CREATE TABLE IF NOT EXISTS links (
             id INT AUTO_INCREMENT PRIMARY KEY,
             url TEXT NOT NULL,
-            short_link VARCHAR(10) NOT NULL UNIQUE,
+            short_link TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
