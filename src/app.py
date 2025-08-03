@@ -1,24 +1,25 @@
-from  flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+import os
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysql_connector import MySQL
 import shortuuid
 
 # init app
 app = Flask(__name__)
 
-# endpoint
-endpoint = 'http://opti.url'
+# endpoint - usar variable de entorno en producción
+endpoint = os.getenv('APP_URL', 'http://localhost')
 
-# connect mysql
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'P@u102018.180905'
-app.config['MYSQL_DATABASE'] = 'db_opti_url'
+# connect mysql - usar variables de entorno
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'localhost')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'P@u102018.180905')
+app.config['MYSQL_DATABASE'] = os.getenv('MYSQL_DATABASE', 'db_opti_url')
 
 # init mysql
 mysql = MySQL(app)
 
-# set secret key
-app.secret_key = 'C14v3S3cr3t4'
+# set secret key - usar variable de entorno
+app.secret_key = os.getenv('SECRET_KEY', 'C14v3S3cr3t4')
 
 # init route
 @app.route('/', methods = ['GET'])
@@ -49,38 +50,35 @@ def create():
             cursor.execute("SELECT SHORT_LINK FROM LINKS WHERE URL = BINARY %s", (url,))
             data = cursor.fetchone()
             if data:
-                flash(endpoint + '/' + data[0])
-                return redirect(url_for('inicio')), 302
+                return jsonify({'short_link': f"{endpoint}/{data[0]}"})
             
+            # insert new link
             cursor.execute("INSERT INTO LINKS (URL, SHORT_LINK) VALUES (%s, %s)", (url, short_link))
-            
             mysql.connection.commit()
             cursor.close()
             
-            new_url = endpoint + '/' + short_link
-            flash(new_url)
-            return redirect(url_for('inicio')), 302
-    except: 
-        return render_template('404.html'), 404
+            return jsonify({'short_link': f"{endpoint}/{short_link}"})
+    except:
+        return jsonify({'error': 'Error creating short link'}), 500
 
-# route to redirect to database
-@app.route('/<id>')
-def getUrl (id):
+# route for redirect to original url
+@app.route('/<short_link>')
+def redirect_url(short_link):
     try:
         cursor = mysql.connection.cursor()
-        
-        # search in database url direction
-        cursor.execute("SELECT URL FROM LINKS WHERE SHORT_LINK = BINARY %s", (id,))
-
-        # save in a variable and close connection
+        cursor.execute("SELECT URL FROM LINKS WHERE SHORT_LINK = BINARY %s", (short_link,))
         data = cursor.fetchone()
         cursor.close()
-
-        return render_template('ads.html', url=data[0]), 200
-
+        
+        if data:
+            return redirect(data[0])
+        else:
+            return render_template('404.html'), 404
     except:
         return render_template('404.html'), 404
 
 # run app
 if __name__ == '__main__':
-    app.run(port = 80, debug = True)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug)
