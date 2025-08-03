@@ -35,6 +35,10 @@ def get_db_connection():
 def init_database():
     try:
         print("Intentando inicializar base de datos...")
+        print(f"Conectando a: {mysql_config['host']}:{mysql_config['port']}")
+        print(f"Usuario: {mysql_config['user']}")
+        print(f"Base de datos: {mysql_config['database']}")
+        
         connection = get_db_connection()
         cursor = connection.cursor()
         
@@ -57,6 +61,7 @@ def init_database():
         
     except Exception as e:
         print(f"Error inicializando base de datos: {e}")
+        print(f"Tipo de error: {type(e).__name__}")
         return False
 
 # La inicialización se hace bajo demanda en la primera consulta
@@ -76,6 +81,17 @@ def inicio():
 @app.route('/health', methods = ['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'message': 'App is running'}), 200
+
+# Database configuration diagnostic endpoint
+@app.route('/db-config', methods = ['GET'])
+def db_config():
+    return jsonify({
+        'mysql_host': os.getenv('MYSQLHOST', 'NOT_SET'),
+        'mysql_user': os.getenv('MYSQLUSER', 'NOT_SET'),
+        'mysql_database': os.getenv('MYSQLDATABASE', 'NOT_SET'),
+        'mysql_port': os.getenv('MYSQLPORT', 'NOT_SET'),
+        'has_password': 'YES' if os.getenv('MYSQLPASSWORD') else 'NO'
+    })
 
 # Manual database initialization endpoint
 @app.route('/init-db', methods = ['GET'])
