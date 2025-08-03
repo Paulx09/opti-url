@@ -35,14 +35,20 @@
     const resultArea = document.getElementById('result-area');
     const errorArea = document.getElementById('error-area');
     const nuevaUrlInput = document.getElementById('nueva-url');
+    const submitButton = e.target.querySelector('button[type="submit"]');
     
     // Ocultar áreas de resultado y error
     resultArea.style.display = 'none';
     errorArea.style.display = 'none';
     
+    // Mostrar estado de carga
+    submitButton.disabled = true;
+    submitButton.innerHTML = 'Procesando...';
+    
     // Crear FormData para enviar al servidor
     const formData = new FormData();
     formData.append('url', urlInput.value);
+    console.log('Enviando URL:', urlInput.value); // Debug
     
     try {
       // Enviar petición al servidor
@@ -52,21 +58,35 @@
       });
       
       const data = await response.json();
+      console.log('Respuesta del servidor:', data); // Debug
       
       if (data.short_link) {
         // Mostrar el resultado exitoso
+        console.log('Short link recibido:', data.short_link); // Debug
         nuevaUrlInput.value = data.short_link;
+        console.log('Valor asignado al input:', nuevaUrlInput.value); // Debug
         resultArea.style.display = 'block';
         urlInput.value = ''; // Limpiar el formulario
       } else if (data.error) {
         // Mostrar error
+        console.log('Error del servidor:', data.error); // Debug
         errorArea.textContent = data.error;
+        errorArea.style.display = 'block';
+      } else {
+        // Si no hay short_link ni error, mostrar la respuesta completa
+        console.log('Respuesta inesperada:', data);
+        errorArea.textContent = 'Respuesta inesperada del servidor: ' + JSON.stringify(data);
         errorArea.style.display = 'block';
       }
     } catch (error) {
       // Mostrar error de conexión
+      console.log('Error de conexión:', error); // Debug
       errorArea.textContent = 'Error de conexión: ' + error.message;
       errorArea.style.display = 'block';
+    } finally {
+      // Restaurar el botón
+      submitButton.disabled = false;
+      submitButton.innerHTML = 'Cortar URL';
     }
   });
 
