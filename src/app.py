@@ -43,17 +43,18 @@ mysql_external_config = {
 # create connection pool
 def get_db_connection():
     try:
-        # Try internal connection first
-        return mysql.connector.connect(**mysql_config)
-    except Exception as internal_error:
-        print(f"Error with internal connection: {internal_error}")
+        # Try external connection first (more reliable for Railway)
+        print("Trying external connection...")
+        return mysql.connector.connect(**mysql_external_config)
+    except Exception as external_error:
+        print(f"Error with external connection: {external_error}")
         try:
-            # Try external connection as fallback
-            print("Trying external connection...")
-            return mysql.connector.connect(**mysql_external_config)
-        except Exception as external_error:
-            print(f"Error with external connection: {external_error}")
-            raise internal_error  # Raise the original error
+            # Try internal connection as fallback
+            print("Trying internal connection...")
+            return mysql.connector.connect(**mysql_config)
+        except Exception as internal_error:
+            print(f"Error with internal connection: {internal_error}")
+            raise external_error  # Raise the external error since it's preferred
 
 # Función para inicializar la base de datos
 def init_database():
@@ -124,10 +125,16 @@ def health_check():
 @app.route('/db-config', methods = ['GET'])
 def db_config():
     return jsonify({
-        'mysql_host': os.getenv('MYSQLHOST', 'NOT_SET'),
-        'mysql_user': os.getenv('MYSQLUSER', 'NOT_SET'),
-        'mysql_database': os.getenv('MYSQLDATABASE', 'NOT_SET'),
-        'mysql_port': os.getenv('MYSQLPORT', 'NOT_SET'),
+        'internal_config': {
+            'mysql_host': os.getenv('MYSQLHOST', 'NOT_SET'),
+            'mysql_user': os.getenv('MYSQLUSER', 'NOT_SET'),
+            'mysql_database': os.getenv('MYSQLDATABASE', 'NOT_SET'),
+            'mysql_port': os.getenv('MYSQLPORT', 'NOT_SET'),
+        },
+        'external_config': {
+            'mysql_public_host': os.getenv('MYSQL_PUBLIC_HOST', 'NOT_SET'),
+            'mysql_public_port': os.getenv('MYSQL_PUBLIC_PORT', 'NOT_SET'),
+        },
         'has_password': 'YES' if os.getenv('MYSQLPASSWORD') else 'NO'
     })
 
