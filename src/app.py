@@ -72,10 +72,10 @@ def init_database():
         
         # Crear la tabla LINKS si no existe
         create_table_query = """
-        CREATE TABLE IF NOT EXISTS LINKS (
+        CREATE TABLE IF NOT EXISTS links (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            URL TEXT NOT NULL,
-            SHORT_LINK VARCHAR(10) NOT NULL UNIQUE,
+            url TEXT NOT NULL,
+            short_link VARCHAR(10) NOT NULL UNIQUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
@@ -86,13 +86,13 @@ def init_database():
         print("Tabla creada y commit realizado")
         
         # Verificar que la tabla existe
-        cursor.execute("SHOW TABLES LIKE 'LINKS'")
+        cursor.execute("SHOW TABLES LIKE 'links'")
         result = cursor.fetchone()
         print(f"Verificación de tabla: {result}")
         
         cursor.close()
         connection.close()
-        print("Tabla LINKS inicializada correctamente")
+        print("Tabla links inicializada correctamente")
         return True
         
     except Exception as e:
@@ -224,13 +224,13 @@ def create():
             # cicle for duplicated url
             while True:
                 short_link = shortuuid.ShortUUID().random(length = 7)
-                cursor.execute("SELECT * FROM LINKS WHERE SHORT_LINK = BINARY %s", (short_link,))
+                cursor.execute("SELECT * FROM links WHERE short_link = BINARY %s", (short_link,))
                 
                 if not cursor.fetchone():
                     break
             
             # check if url already exists
-            cursor.execute("SELECT SHORT_LINK FROM LINKS WHERE URL = BINARY %s", (url,))
+            cursor.execute("SELECT short_link FROM links WHERE url = BINARY %s", (url,))
             data = cursor.fetchone()
             if data:
                 cursor.close()
@@ -238,7 +238,7 @@ def create():
                 return jsonify({'short_link': f"{endpoint}/{data[0]}"})
             
             # insert new link
-            cursor.execute("INSERT INTO LINKS (URL, SHORT_LINK) VALUES (%s, %s)", (url, short_link))
+            cursor.execute("INSERT INTO links (url, short_link) VALUES (%s, %s)", (url, short_link))
             connection.commit()
             cursor.close()
             connection.close()
@@ -254,7 +254,7 @@ def redirect_url(short_link):
         # get database connection
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("SELECT URL FROM LINKS WHERE SHORT_LINK = BINARY %s", (short_link,))
+        cursor.execute("SELECT url FROM links WHERE short_link = BINARY %s", (short_link,))
         data = cursor.fetchone()
         cursor.close()
         connection.close()
