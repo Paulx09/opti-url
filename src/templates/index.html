@@ -28,10 +28,7 @@
   // Limpiar al cargar la página
   document.addEventListener('DOMContentLoaded', function() {
     const backupDisplay = document.getElementById('backup-display');
-    
-    // Asegurar que el área de resultado esté oculta al cargar
     backupDisplay.style.display = 'none';
-    console.log('Página cargada - display limpiado');
   });
 
   // Manejar el submit del formulario con AJAX
@@ -53,7 +50,6 @@
     // Crear FormData para enviar al servidor
     const formData = new FormData();
     formData.append('url', urlInput.value);
-    console.log('Enviando URL:', urlInput.value); // Debug
     
     try {
       // Enviar petición al servidor
@@ -63,35 +59,26 @@
       });
       
       const data = await response.json();
-      console.log('Respuesta del servidor:', data); // Debug
       
       if (data.short_link) {
         // Mostrar el resultado exitoso
-        console.log('Short link recibido:', data.short_link); // Debug
-        
-        // Mostrar en el display alternativo
         const urlDisplay = document.getElementById('url-display');
         const backupDisplay = document.getElementById('backup-display');
         urlDisplay.textContent = data.short_link;
         backupDisplay.style.display = 'block';
         
-        console.log('Valor asignado al display:', urlDisplay.textContent); // Debug
-        
         urlInput.value = ''; // Limpiar el formulario
       } else if (data.error) {
         // Mostrar error
-        console.log('Error del servidor:', data.error); // Debug
         errorArea.textContent = data.error;
         errorArea.style.display = 'block';
       } else {
         // Si no hay short_link ni error, mostrar la respuesta completa
-        console.log('Respuesta inesperada:', data);
         errorArea.textContent = 'Respuesta inesperada del servidor: ' + JSON.stringify(data);
         errorArea.style.display = 'block';
       }
     } catch (error) {
       // Mostrar error de conexión
-      console.log('Error de conexión:', error); // Debug
       errorArea.textContent = 'Error de conexión: ' + error.message;
       errorArea.style.display = 'block';
     } finally {
@@ -105,18 +92,14 @@
     const urlDisplay = document.getElementById('url-display');
     const btnCopiar = document.getElementById('btn-copiar-alt');
     const url = urlDisplay.textContent;
-    console.log('[copiarURLAlternativa] Copiando:', url);
     
     if (!url) {
-      console.error('¡Display alternativo está vacío!');
       return;
     }
     
     // Usar la API moderna de clipboard
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(function() {
-        console.log('[copiarURLAlternativa] URL copiada exitosamente');
-        
         // Cambiar apariencia del botón igual que el original
         btnCopiar.innerHTML = "¡Copiado!";
         btnCopiar.classList.replace("btn-outline-success", "btn-success");
@@ -129,7 +112,6 @@
         }, 3000);
         
       }).catch(function(err) {
-        console.error('[copiarURLAlternativa] Error:', err);
         alert('Error al copiar la URL');
       });
     } else {
@@ -153,7 +135,6 @@
         }, 3000);
         
       } catch (err) {
-        console.error('[copiarURLAlternativa] Error:', err);
         alert('Error al copiar la URL');
       }
       document.body.removeChild(textArea);
