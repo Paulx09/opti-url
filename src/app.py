@@ -8,7 +8,7 @@ import shortuuid
 app = Flask(__name__)
 
 # endpoint - usar variable de entorno en producción
-endpoint = os.getenv('APP_URL', 'https://flask-production-0ce9.up.railway.app')
+endpoint = os.getenv('APP_URL', 'https://opti-url.up.railway.app')
 
 # mysql connection config
 mysql_config = {
