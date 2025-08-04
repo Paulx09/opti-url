@@ -13,18 +13,11 @@
       </div>
     </form>
     
-    <!-- Área para mostrar el resultado -->
-    <div id="result-area" class="input-group mb-3" style="display: none;">
-      <input id="nueva-url" type="text" class="form-control ms-2 mt-2" 
-             style="border-radius: 10px; color: #000 !important; background-color: #fff !important; font-size: 14px !important; opacity: 1 !important;" />
-      <button id="btn-copiar" onclick="copiarURL()" type="button" class="btn btn-outline-success ms-2 mt-2" style="border-radius: 10px;">Copiar URL</button>
-    </div>
-    
-    <!-- Alternativa visual con párrafo -->
+    <!-- Área para mostrar el resultado con display mejorado -->
     <div id="backup-display" class="alert alert-success mt-3" style="display: none;">
       <strong>URL acortada generada:</strong><br>
       <span id="url-display" style="font-family: monospace; font-size: 16px; color: #000; background-color: #f8f9fa; padding: 5px; border: 1px solid #ddd; border-radius: 5px; display: inline-block; min-width: 300px;"></span>
-      <button onclick="copiarURLAlternativa()" class="btn btn-sm btn-outline-primary ms-2">Copiar</button>
+      <button id="btn-copiar-alt" onclick="copiarURLAlternativa()" class="btn btn-sm btn-outline-success ms-2" style="border-radius: 10px;">Copiar URL</button>
     </div>
     
     <!-- Área para mostrar errores -->
@@ -32,15 +25,13 @@
   </div>
 </div>
 <script>
-  // Limpiar el input al cargar la página
+  // Limpiar al cargar la página
   document.addEventListener('DOMContentLoaded', function() {
-    const nuevaUrlInput = document.getElementById('nueva-url');
-    const resultArea = document.getElementById('result-area');
+    const backupDisplay = document.getElementById('backup-display');
     
     // Asegurar que el área de resultado esté oculta al cargar
-    resultArea.style.display = 'none';
-    nuevaUrlInput.value = '';
-    console.log('Página cargada - input limpiado');
+    backupDisplay.style.display = 'none';
+    console.log('Página cargada - display limpiado');
   });
 
   // Manejar el submit del formulario con AJAX
@@ -48,13 +39,11 @@
     e.preventDefault(); // Prevenir el submit tradicional
     
     const urlInput = document.getElementById('url-input');
-    const resultArea = document.getElementById('result-area');
     const errorArea = document.getElementById('error-area');
-    const nuevaUrlInput = document.getElementById('nueva-url');
     const submitButton = e.target.querySelector('button[type="submit"]');
     
     // Ocultar áreas de resultado y error
-    resultArea.style.display = 'none';
+    document.getElementById('backup-display').style.display = 'none';
     errorArea.style.display = 'none';
     
     // Mostrar estado de carga
@@ -80,41 +69,13 @@
         // Mostrar el resultado exitoso
         console.log('Short link recibido:', data.short_link); // Debug
         
-        // Asignar valor al input de múltiples maneras para asegurar que funcione
-        nuevaUrlInput.value = data.short_link;
-        nuevaUrlInput.setAttribute('value', data.short_link);
-        
-        // También mostrar en el display alternativo
+        // Mostrar en el display alternativo
         const urlDisplay = document.getElementById('url-display');
         const backupDisplay = document.getElementById('backup-display');
         urlDisplay.textContent = data.short_link;
         backupDisplay.style.display = 'block';
         
-        console.log('Valor asignado al input:', nuevaUrlInput.value); // Debug
-        console.log('Valor asignado al display alternativo:', urlDisplay.textContent); // Debug
-        console.log('Atributo value del input:', nuevaUrlInput.getAttribute('value')); // Debug
-        
-        // Mostrar el área de resultado
-        resultArea.style.display = 'block';
-        
-        // Forzar un re-render y actualización visual múltiple
-        setTimeout(() => {
-          console.log('Verificación final - valor del input:', nuevaUrlInput.value);
-          
-          // Forzar actualización visual
-          nuevaUrlInput.focus();
-          nuevaUrlInput.blur();
-          
-          // Trigger eventos para forzar re-render
-          nuevaUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
-          nuevaUrlInput.dispatchEvent(new Event('change', { bubbles: true }));
-          
-          // Forzar selección para verificar visibilidad
-          nuevaUrlInput.select();
-          setTimeout(() => {
-            nuevaUrlInput.setSelectionRange(0, 0); // Deseleccionar
-          }, 100);
-        }, 100);
+        console.log('Valor asignado al display:', urlDisplay.textContent); // Debug
         
         urlInput.value = ''; // Limpiar el formulario
       } else if (data.error) {
@@ -140,41 +101,9 @@
     }
   });
 
-  function copiarURL() {
-    const nuevaURL = document.getElementById("nueva-url");
-    console.log('Copiando URL - valor actual:', nuevaURL.value); // Debug
-    
-    if (!nuevaURL.value) {
-      console.error('¡Input está vacío! Esto no debería pasar.');
-      return;
-    }
-    
-    nuevaURL.select();
-    nuevaURL.setSelectionRange(0, 99999); // Para dispositivos móviles
-    
-    // Usar la API moderna de clipboard si está disponible
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(nuevaURL.value);
-    } else {
-      // Fallback para navegadores más antiguos
-      document.execCommand("copy");
-    }
-
-    const btnCopiar = document.getElementById("btn-copiar");
-    btnCopiar.innerHTML = "¡Copiado!";
-    btnCopiar.classList.replace("btn-outline-success", "btn-success");
-
-    setTimeout(() => {
-      // Resetear el botón y ocultar el resultado
-      btnCopiar.innerHTML = "Copiar URL";
-      btnCopiar.classList.replace("btn-success", "btn-outline-success");
-      document.getElementById('result-area').style.display = 'none';
-      document.getElementById('backup-display').style.display = 'none';
-    }, 3000);
-  }
-  
   function copiarURLAlternativa() {
     const urlDisplay = document.getElementById('url-display');
+    const btnCopiar = document.getElementById('btn-copiar-alt');
     const url = urlDisplay.textContent;
     console.log('[copiarURLAlternativa] Copiando:', url);
     
@@ -187,7 +116,18 @@
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(function() {
         console.log('[copiarURLAlternativa] URL copiada exitosamente');
-        alert('URL copiada al portapapeles!');
+        
+        // Cambiar apariencia del botón igual que el original
+        btnCopiar.innerHTML = "¡Copiado!";
+        btnCopiar.classList.replace("btn-outline-success", "btn-success");
+        
+        setTimeout(() => {
+          // Resetear el botón y ocultar el resultado después de 3 segundos
+          btnCopiar.innerHTML = "Copiar URL";
+          btnCopiar.classList.replace("btn-success", "btn-outline-success");
+          document.getElementById('backup-display').style.display = 'none';
+        }, 3000);
+        
       }).catch(function(err) {
         console.error('[copiarURLAlternativa] Error:', err);
         alert('Error al copiar la URL');
@@ -201,7 +141,17 @@
       textArea.select();
       try {
         document.execCommand('copy');
-        alert('URL copiada al portapapeles!');
+        
+        // Cambiar apariencia del botón
+        btnCopiar.innerHTML = "¡Copiado!";
+        btnCopiar.classList.replace("btn-outline-success", "btn-success");
+        
+        setTimeout(() => {
+          btnCopiar.innerHTML = "Copiar URL";
+          btnCopiar.classList.replace("btn-success", "btn-outline-success");
+          document.getElementById('backup-display').style.display = 'none';
+        }, 3000);
+        
       } catch (err) {
         console.error('[copiarURLAlternativa] Error:', err);
         alert('Error al copiar la URL');
